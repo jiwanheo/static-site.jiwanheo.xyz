@@ -19,18 +19,24 @@ jobs:
           node-version: "v21.7.1" # Specify the Node.js version you want to use
 
       - name: Install dependencies
-        run: npm install # Install dependencies using npm (or yarn, if you're using it)
+        run: |
+          cd site  # Navigate to the 'site' directory
+          npm install  # Now 'npm install' will work in the correct directory
 
       - name: Build the app
-        run: npm run build # Run `next build` to generate static files in the `out` folder
+        run: |
+          cd site  # Make sure we are in the 'site' directory
+          npm run build  # Run the build process
 
       # Install and start a local server to preview the build
       - name: Install http-server
-        run: npm install -g http-server
+        run: |
+          cd site
+          npm install -g http-server
 
       - name: Preview the site (Local Server)
         run: |
-          cd out
+          cd site/out
           http-server -p 8080 &  # Run in background on port 8080
           sleep 10  # Allow some time for the server to start
           curl http://localhost:8080  # Test the server
