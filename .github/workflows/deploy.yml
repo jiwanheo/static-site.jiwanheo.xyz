@@ -1,0 +1,35 @@
+name: Deploy Next.js to S3
+
+on:
+  push:
+    branches:
+      - main # This will trigger the workflow when you push to the main branch
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest # This specifies the environment the job will run in
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2 # Checkout the code from your repository
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "lts" # Specify the Node.js version you want to use
+
+      - name: Install dependencies
+        run: npm install # Install dependencies using npm (or yarn, if you're using it)
+
+      - name: Build the app
+        run: npm run build # Run `next export` to generate static files in the `out` folder
+
+      - name: Deploy to S3
+        uses: jakejarvis/s3-sync-action@v0.5.0 # Action to sync your build folder with S3
+        with:
+          source_dir: "./out" # The build output directory
+          destination_bucket: "your-s3-bucket-name" # Replace with your S3 bucket name
+          region: "us-east-2" # Replace with your AWS region
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }} # AWS credentials stored in GitHub secrets
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # AWS credentials stored in GitHub secrets
+          acl: "public-read" # Set files to be publicly accessible
