@@ -16,7 +16,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: "lts" # Specify the Node.js version you want to use
+          node-version: "v21.7.1" # Specify the Node.js version you want to use
 
       - name: Install dependencies
         run: npm install # Install dependencies using npm (or yarn, if you're using it)
@@ -24,12 +24,13 @@ jobs:
       - name: Build the app
         run: npm run build # Run `next build` to generate static files in the `out` folder
 
-      - name: Deploy to S3
-        uses: jakejarvis/s3-sync-action@v0.5.0 # Action to sync your build folder with S3
-        with:
-          source_dir: "./out" # The build output directory
-          destination_bucket: "static-site.jiwanheo.xyz" # Replace with your S3 bucket name
-          region: "us-east-2" # Replace with your AWS region
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }} # AWS credentials stored in GitHub secrets
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # AWS credentials stored in GitHub secrets
-          acl: "public-read" # Set files to be publicly accessible
+      # Install and start a local server to preview the build
+      - name: Install http-server
+        run: npm install -g http-server
+
+      - name: Preview the site (Local Server)
+        run: |
+          cd out
+          http-server -p 8080 &  # Run in background on port 8080
+          sleep 10  # Allow some time for the server to start
+          curl http://localhost:8080  # Test the server
