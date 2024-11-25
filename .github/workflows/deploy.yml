@@ -3,7 +3,10 @@ name: Deploy Next.js to S3
 on:
   push:
     branches:
-      - phase2 # This will trigger the workflow when you push to the main branch
+      - main # Trigger on push to main branch
+  pull_request:
+    branches:
+      - main # Trigger on PRs targeting the main branch
 
 jobs:
   build_and_deploy:
