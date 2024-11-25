@@ -28,15 +28,11 @@ jobs:
           cd site  # Make sure we are in the 'site' directory
           npm run build  # Run the build process
 
-      # Install and start a local server to preview the build
-      - name: Install http-server
+      - name: Deploy to S3
         run: |
-          cd site
-          npm install -g http-server
-
-      - name: Preview the site (Local Server)
-        run: |
-          cd site/out
-          http-server -p 8080 &  # Run in background on port 8080
-          sleep 10  # Allow some time for the server to start
-          curl http://localhost:8080  # Test the server
+          cd site  # Ensure we are in the 'site' directory
+          aws s3 sync out/ s3://static-site.jiwanheo.xyz --delete  # Deploy the 'out' folder to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: "us-east-2"
