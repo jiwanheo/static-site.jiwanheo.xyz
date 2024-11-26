@@ -34,7 +34,7 @@ jobs:
       - name: Deploy to S3
         run: |
           cd site  # Ensure we are in the 'site' directory
-          aws s3 sync out/ s3://static-site.jiwanheo.xyz --delete  # Deploy the 'out' folder to S3
+          aws s3 sync out/ s3://static-site.jiwanheo.xyz --exact-timestamps --delete  # Deploy the 'out' folder to S3
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
