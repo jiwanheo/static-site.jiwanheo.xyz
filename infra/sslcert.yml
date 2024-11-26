@@ -1,0 +1,16 @@
+Resources:
+  MySSLCertificate:
+    Type: AWS::ACM::Certificate
+    Properties:
+      DomainName: static-site.jiwanheo.xyz
+      ValidationMethod: DNS
+
+  MyDNSValidationRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: "Z066358329E65RHIEOJXQ" # Reference to the hosted zone (Route 53)
+      Name: !GetAtt MySSLCertificate.DomainValidationOptions.0.ResourceRecord.Name # The CNAME record name to validate
+      Type: CNAME
+      TTL: "60"
+      ResourceRecords:
+        - !GetAtt MySSLCertificate.DomainValidationOptions.0.ResourceRecord.Value # The CNAME record value to validate

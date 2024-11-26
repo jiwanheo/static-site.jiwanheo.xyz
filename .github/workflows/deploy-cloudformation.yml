@@ -29,3 +29,11 @@ jobs:
             --template-file infra/s3bucket.yml \
             --stack-name MyS3BucketStack \
             --capabilities CAPABILITY_NAMED_IAM
+
+      # Step 4: Deploy SSL Certificate Stack
+      - name: Deploy SSL Certificate Stack
+        run: |
+          aws cloudformation deploy \
+            --template-file infra/sslcert.yml \
+            --stack-name MySSLCertificateStack \
+            --capabilities CAPABILITY_NAMED_IAM
