@@ -2,6 +2,6 @@ Resources:
   MyS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: my-github-deployed-s3-bucket # Replace with your unique bucket name
+      BucketName: static-site.jiwanheo.xyz
       VersioningConfiguration:
         Status: Enabled # Enable versioning if needed
