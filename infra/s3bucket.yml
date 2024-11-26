@@ -1,0 +1,8 @@
+Resources:
+  MyS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-github-deployed-s3-bucket # Replace with your unique bucket name
+      # AccessControl: Private
+      # VersioningConfiguration:
+      #   Status: Enabled
