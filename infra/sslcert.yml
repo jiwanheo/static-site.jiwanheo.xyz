@@ -4,16 +4,21 @@ Resources:
     Properties:
       DomainName: static-site.jiwanheo.xyz
       ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: static-site.jiwanheo.xyz
+          ValidationDomain: jiwanheo.xyz
 
-  # MyDNSValidationRecord:
-  #   Type: AWS::Route53::RecordSet
-  #   Properties:
-  #     HostedZoneId: "Z066358329E65RHIEOJXQ" # Reference to the hosted zone (Route 53)
-  #     Name: !GetAtt MySSLCertificate.DomainValidationOptions.0.ResourceRecord.Name # The CNAME record name to validate
-  #     Type: CNAME
-  #     TTL: "60"
-  #     ResourceRecords:
-  #       - !GetAtt MySSLCertificate.DomainValidationOptions.0.ResourceRecord.Value # The CNAME record value to validate
+  MyDNSValidationRecord:
+    Type: AWS::Route53::RecordSet
+    DependsOn: MySSLCertificate # Ensure the certificate is created first
+    Properties:
+      HostedZoneId: "Z066358329E65RHIEOJXQ" # Your Route 53 Hosted Zone ID
+      Name: !Select [0, !GetAtt MySSLCertificate.DomainValidationOptions] # Get the Name of the validation record
+      Type: CNAME
+      TTL: "60"
+      ResourceRecords:
+        - !Select [1, !GetAtt MySSLCertificate.DomainValidationOptions] # Get the Value of the validation record
+
 Outputs:
   CertificateArn:
     Description: "ARN of the SSL certificate"
