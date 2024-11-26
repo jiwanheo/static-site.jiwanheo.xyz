@@ -26,6 +26,6 @@ jobs:
       - name: Deploy CloudFormation stack
         run: |
           aws cloudformation deploy \
-            --template-file infra/s3bucket.yml \
+            --template-file infra/s3bucket.yml \ 
             --stack-name MyS3BucketStack \
             --capabilities CAPABILITY_NAMED_IAM
