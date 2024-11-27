@@ -3,26 +3,26 @@ Description: Deploy ACM Certificate with DNS Validation
 Resources:
   # IAM Role for the Lambda Function
   CustomACMLambdaExecutionRole:
-  Type: AWS::IAM::Role
-  Properties:
-    AssumeRolePolicyDocument:
-      Version: "2012-10-17"
-      Statement:
-        - Effect: Allow
-          Principal:
-            Service: lambda.amazonaws.com
-          Action: sts:AssumeRole
-    Policies: # This is a list of policy documents
-      - PolicyName: ACMCustomResourcePolicy
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Effect: Allow
-              Action:
-                - acm:RequestCertificate
-                - acm:DescribeCertificate
-                - acm:DeleteCertificate
-                - route53:ChangeResourceRecordSets
-                - route53:GetChange
-                - route53:ListResourceRecordSets
-              Resource: "*"
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies: # This is a list of policy documents
+        - PolicyName: ACMCustomResourcePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - acm:RequestCertificate
+                  - acm:DescribeCertificate
+                  - acm:DeleteCertificate
+                  - route53:ChangeResourceRecordSets
+                  - route53:GetChange
+                  - route53:ListResourceRecordSets
+                Resource: "*"
