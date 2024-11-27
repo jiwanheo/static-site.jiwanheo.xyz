@@ -3,7 +3,7 @@ name: Deploy Next.js to S3
 on:
   push:
     branches:
-      - phase4 # Trigger on push to main branch
+      - main # Trigger on push to main branch
   pull_request:
     branches:
       - main # Trigger on PRs targeting the main branch
