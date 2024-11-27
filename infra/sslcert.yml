@@ -1,111 +1,28 @@
-Resources:
-  MySSLCertificate:
-    Type: AWS::CertificateManager::Certificate
-    Properties:
-      DomainName: static-site.jiwanheo.xyz
-      ValidationMethod: DNS
-      DomainValidationOptions:
-        - DomainName: static-site.jiwanheo.xyz
-          ValidationDomain: jiwanheo.xyz
+Description: Deploy ACM Certificate with DNS Validation
 
-  LambdaExecutionRole:
+Resources:
+  # IAM Role for the Lambda Function
+  CustomACMLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Effect: "Allow"
-            Action: "sts:AssumeRole"
+          - Effect: Allow
             Principal:
-              Service: "lambda.amazonaws.com"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaFullAccess # Optional for additional permissions
-      RoleName: LambdaExecutionRole
-
-  # Step 2: Lambda function to fetch DNS validation record details
-  FetchDNSValidationRecordFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      Handler: index.lambda_handler
-      Role: !GetAtt LambdaExecutionRole.Arn
-      FunctionName: FetchDNSValidationRecord
-      Runtime: python3.8
-      Timeout: 300
-      Code:
-        ZipFile: |
-          import json
-          import boto3
-
-          acm = boto3.client('acm')
-          route53 = boto3.client('route53')
-
-          def lambda_handler(event, context):
-              certificate_arn = event['ResourceProperties']['CertificateArn']
-
-              try:
-                  # Describe the certificate to get the validation options
-                  response = acm.describe_certificate(CertificateArn=certificate_arn)
-                  validation_options = response['Certificate']['DomainValidationOptions'][0]
-                  
-                  # Get the Name and Value for the CNAME record
-                  validation_name = validation_options['ResourceRecord']['Name']
-                  validation_value = validation_options['ResourceRecord']['Value']
-
-                  # Return the DNS record details as part of the response to CloudFormation
-                  response_data = {
-                      'Name': validation_name,
-                      'Value': validation_value
-                  }
-                  
-                  send_response(event, 'SUCCESS', response_data)
-              
-              except Exception as e:
-                  print(f"Error: {str(e)}")
-                  send_response(event, 'FAILED')
-
-          def send_response(event, status, data={}):
-              response_body = {
-                  'Status': status,
-                  'Reason': 'See the details in CloudWatch Log Stream: ' + event['LogStreamName'],
-                  'PhysicalResourceId': event.get('PhysicalResourceId', 'CustomResource'),
-                  'StackId': event['StackId'],
-                  'RequestId': event['RequestId'],
-                  'LogicalResourceId': event['LogicalResourceId'],
-                  'Data': data
-              }
-
-              # Send response to CloudFormation
-              response_url = event['ResponseURL']
-              response = json.dumps(response_body)
-
-              import urllib3
-              http = urllib3.PoolManager()
-              headers = {'Content-Type': ''}
-              http.request('PUT', response_url, body=response, headers=headers)
-
-  # Step 3: Create a custom resource that will call the Lambda function
-  DNSValidationRecordResource:
-    Type: Custom::FetchDNSValidationRecord
-    Properties:
-      ServiceToken: !GetAtt FetchDNSValidationRecordFunction.Arn
-      CertificateArn: !Ref MySSLCertificate
-      HostedZoneId: Z066358329E65RHIEOJXQ # Replace with your hosted zone ID
-
-  # Step 4: Create DNS record based on dynamically fetched validation info
-  MyDNSValidationRecord:
-    Type: AWS::Route53::RecordSet
-    DependsOn: DNSValidationRecordResource # Ensure it runs after the custom resource
-    Properties:
-      HostedZoneId: !Ref DNSValidationRecordResource
-      Name: !GetAtt DNSValidationRecordResource.Name # Dynamically get the validation record name
-      Type: CNAME
-      TTL: "60"
-      ResourceRecords:
-        - !GetAtt DNSValidationRecordResource.Value # Dynamically get the validation record value
-
-Outputs:
-  CertificateArn:
-    Description: "ARN of the SSL certificate"
-    Value: !Ref MySSLCertificate
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+    Policies:
+      - PolicyName: ACMCustomResourcePolicy
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - acm:RequestCertificate
+                - acm:DescribeCertificate
+                - acm:DeleteCertificate
+                - route53:ChangeResourceRecordSets
+                - route53:GetChange
+                - route53:ListResourceRecordSets
+              Resource: "*"
