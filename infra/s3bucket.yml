@@ -1,7 +1,14 @@
 Resources:
-  MyS3Bucket:
+  S3ForStaticSite:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: static-site.jiwanheo.xyz
+      VersioningConfiguration:
+        Status: Enabled # Enable versioning if needed
+
+  S3ForLambda:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: lambda-for-static-site.jiwanheo.xyz
       VersioningConfiguration:
         Status: Enabled # Enable versioning if needed

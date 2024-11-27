@@ -23,12 +23,19 @@ jobs:
           aws-region: us-east-1 # Replace with your desired region
 
       # Step 3: Deploy CloudFormation Stack
-      - name: Deploy CloudFormation stack
+      - name: Deploy S3 stack
         run: |
           aws cloudformation deploy \
             --template-file infra/s3bucket.yml \
-            --stack-name MyS3BucketStack \
+            --stack-name S3BucketStack \
             --capabilities CAPABILITY_NAMED_IAM
+
+      # Step 4: Set up lambda function
+      - name: Package and Upload Lambda Code
+        run: |
+          cd infra/lambda
+          zip -r lambda_function.zip lambda_function.py
+          aws s3 cp lambda_function.zip s3://lambda-for-static-site.jiwanheo.xyz/lambda_function.zip
 
       # Step 4: Deploy SSL Certificate Stack
       - name: Deploy SSL Certificate Stack
