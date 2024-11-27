@@ -26,3 +26,19 @@ Resources:
                   - route53:GetChange
                   - route53:ListResourceRecordSets
                 Resource: "*"
+
+  # Lambda Function to Handle ACM Validation
+  CustomACMLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.13
+      Code:
+        ZipFile: |
+          import boto3
+          import time
+          def lambda_handler(event, context):
+              # Basic skeleton for lambda_handler
+              return {"Status": "SUCCESS"}
+      Timeout: 300
+      Role: !GetAtt CustomACMLambdaExecutionRole.Arn

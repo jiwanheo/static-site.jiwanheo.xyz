@@ -37,9 +37,3 @@ jobs:
             --template-file infra/sslcert.yml \
             --stack-name MySSLCertificateStack \
             --capabilities CAPABILITY_NAMED_IAM
-
-      # Step 5: Wait for ACM certificate validation using the shell script
-      - name: Wait for ACM certificate validation
-        run: |
-          chmod +x ./infra/wait-for-acm-validation.sh
-          ./infra/wait-for-acm-validation.sh
