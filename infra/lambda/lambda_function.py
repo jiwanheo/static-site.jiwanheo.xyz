@@ -112,11 +112,15 @@ def delete_acm_certificate(certificate_arn):
     except Exception as e:
         logger.error(f"Error deleting ACM certificate: {str(e)}", exc_info=True)
 
-def wait_and_fetch_resource_record(acm_client, certificate_arn, timeout=300, interval=15):
+def wait_and_fetch_cert_resource_record(acm_client, certificate_arn, timeout=300, interval=15):
     """Wait until the ACM certificate includes the ResourceRecord."""
     start_time = time.time()
     while True:
         cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
+
+        status = cert_details['Certificate']['Status']
+        logger.info(f"Cert Status: {status}")
+        
         validation_options = cert_details['Certificate']['DomainValidationOptions'][0]
         
         # Check if the ResourceRecord is available
@@ -170,7 +174,7 @@ def lambda_handler(event, context):
             
             logger.info(f"Requested certificate: {certificate_arn}")
 
-            resource_record = wait_and_fetch_resource_record(acm_client, certificate_arn)
+            resource_record = wait_and_fetch_cert_resource_record(acm_client, certificate_arn)
 
             validation_record_name = resource_record['Name']
             validation_record_value = resource_record['Value']
@@ -181,6 +185,10 @@ def lambda_handler(event, context):
             create_dns_record(
                 hosted_zone_id, validation_record_name, validation_record_value
             )
+
+            logger.info("AFTER CREATING DNS RECORD")
+            cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
+            logger.info(f"Cert_details {cert_details}")
 
             send_response(event, context, 'SUCCESS', "Validation record processed successfully.")
             return {'statusCode': 200, 'body': json.dumps('Validation record processed successfully.')}
