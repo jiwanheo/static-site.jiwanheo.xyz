@@ -16,15 +16,22 @@ route53_client = boto3.client('route53')
 # Initialize the urllib3 PoolManager
 http = urllib3.PoolManager()
 
-def send_response(event, context, response_status, response_data):
+def send_response(event, context, response_status, response_data, physical_resource_id=None):
     """
     Sends a response to CloudFormation indicating success or failure.
     """
+
+    logger.info(f"In send_response, context.log_stream_name: {context.log_stream_name}")
+    logger.info(f"In send_response, physical_resource_id: {physical_resource_id}")
+
+    # Use provided PhysicalResourceId or default to log_stream_name
+    physical_resource_id = physical_resource_id or context.log_stream_name
+
     response_url = event['ResponseURL']
     response_body = {
         'Status': response_status,
-        'Reason': response_data,
-        'PhysicalResourceId': context.log_stream_name,
+        'Reason': f"Details in CloudWatch Log Stream: {context.log_stream_name}",
+        'PhysicalResourceId': physical_resource_id,
         'StackId': event['StackId'],
         'RequestId': event['RequestId'],
         'LogicalResourceId': event['LogicalResourceId'],
@@ -117,10 +124,6 @@ def wait_and_fetch_cert_resource_record(acm_client, certificate_arn, timeout=300
     start_time = time.time()
     while True:
         cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
-
-        status = cert_details['Certificate']['Status']
-        logger.info(f"Cert Status: {status}")
-        
         validation_options = cert_details['Certificate']['DomainValidationOptions'][0]
         
         # Check if the ResourceRecord is available
@@ -151,7 +154,12 @@ def lambda_handler(event, context):
         if not all([domain_name, hosted_zone_id]):
             error_message = "Missing one or more required properties."
             logger.error(error_message)
-            send_response(event, context, 'FAILED', error_message)
+            send_response(
+                    event, 
+                    context, 
+                    response_status = 'FAILED', 
+                    response_data = error_message
+            )
             return {'statusCode': 500, 'body': error_message}
         
         if event['RequestType'] in ['Create', 'Update']:
@@ -169,13 +177,17 @@ def lambda_handler(event, context):
             if certificate_arn is None:
                 error_message = "CertificateArn is missing, cannot proceed with certificate validation."
                 logger.error(error_message)
-                send_response(event, context, 'FAILED', error_message)
+                send_response(
+                    event, 
+                    context, 
+                    response_status = 'FAILED', 
+                    response_data = error_message
+                )
                 return {'statusCode': 500, 'body': error_message}
             
             logger.info(f"Requested certificate: {certificate_arn}")
 
             resource_record = wait_and_fetch_cert_resource_record(acm_client, certificate_arn)
-
             validation_record_name = resource_record['Name']
             validation_record_value = resource_record['Value']
 
@@ -186,11 +198,14 @@ def lambda_handler(event, context):
                 hosted_zone_id, validation_record_name, validation_record_value
             )
 
-            logger.info("AFTER CREATING DNS RECORD")
-            cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
-            logger.info(f"Cert_details {cert_details}")
-
-            send_response(event, context, 'SUCCESS', "Validation record processed successfully.")
+            send_response(
+                event, 
+                context, 
+                response_status = 'SUCCESS', 
+                response_data = {'Message': 'ACM Certificate created and validated.'},
+                physical_resource_id=certificate_arn
+            )
+            
             return {'statusCode': 200, 'body': json.dumps('Validation record processed successfully.')}
         
         elif event['RequestType'] == 'Delete':
@@ -209,7 +224,12 @@ def lambda_handler(event, context):
             if certificate_arn is None:
                 error_message = "CertificateArn is missing, cannot proceed with certificate validation."
                 logger.error(error_message)
-                send_response(event, context, 'FAILED', error_message)
+                send_response(
+                    event, 
+                    context, 
+                    response_status = 'FAILED', 
+                    response_data = error_message
+                )
                 return {'statusCode': 500, 'body': error_message}
             
             resource_record = wait_and_fetch_resource_record(acm_client, certificate_arn)
@@ -224,8 +244,15 @@ def lambda_handler(event, context):
 
             logger.info(f"Deleting certificate: {certificate_arn}")
             delete_acm_certificate(certificate_arn)
-        
-            send_response(event, context, 'SUCCESS', "Validation record and certificate deleted successfully.")
+
+            send_response(
+                event, 
+                context, 
+                response_status = 'SUCCESS', 
+                response_data = {'Message': "Validation record and certificate deleted successfully."},
+                physical_resource_id=certificate_arn
+            )
+
             return {'statusCode': 200, 'body': json.dumps("Validation record and certificate deleted successfully.")}
 
 
