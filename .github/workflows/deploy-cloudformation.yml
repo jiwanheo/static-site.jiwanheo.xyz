@@ -34,9 +34,7 @@ jobs:
       - name: Package and Upload Lambda Code
         run: |
           cd infra/lambda
-          mkdir -p dependencies
-          pip install requests -t dependencies
-          zip -r lambda_function.zip lambda_function.py dependencies/
+          zip -r lambda_function.zip lambda_function.py
           aws s3 cp lambda_function.zip s3://lambda-for-static-site.jiwanheo.xyz/lambda_function.zip
 
       # Step 4: Deploy SSL Certificate Stack

@@ -2,7 +2,7 @@ import json
 import boto3
 import time
 import logging
-import requests
+import urllib3
 
 
 # Set up logging
@@ -12,6 +12,9 @@ logger.setLevel(logging.INFO)
 # Boto3 clients
 acm_client = boto3.client('acm')
 route53_client = boto3.client('route53')
+
+# Initialize the urllib3 PoolManager
+http = urllib3.PoolManager()
 
 def send_response(event, context, response_status, response_data):
     """
@@ -28,10 +31,17 @@ def send_response(event, context, response_status, response_data):
         'Data': response_data
     }
 
-    logger.info(f"Sending response to CloudFormation: {response_body}")
+    # Convert the dictionary to JSON
+    encoded_body = json.dumps(response_body).encode('utf-8')
 
     try:
-        response = requests.put(response_url, json=response_body)
+        response = http.request(
+            'PUT',
+            response_url,
+            body=encoded_body, 
+            headers={'Content-Type': 'application/json'}
+        )
+
         logger.info(f"Response sent to CloudFormation: {response.status_code}")
     except Exception as e:
         logger.error(f"Failed to send response to CloudFormation: {str(e)}")
