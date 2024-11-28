@@ -42,7 +42,7 @@ def send_response(event, context, response_status, response_data):
             headers={'Content-Type': 'application/json'}
         )
 
-        logger.info(f"Here's response from send_response: {response.status}")
+        logger.info(f"Sending to CloudFormation response: {response.status}")
     except Exception as e:
         logger.error(f"Failed to send response to CloudFormation: {str(e)}")
 
@@ -170,18 +170,16 @@ def lambda_handler(event, context):
         
         elif event['RequestType'] == 'Delete':
             logger.info(f"Deleting validation record for domain: {domain_name}")
-            
-            certificate_id = event['PhysicalResourceId']
 
-            logger.info(f"Here's the physicalResourceId: {certificate_id}")
+            # Pull all certs, and delete the one that matches the name of this stack's cert.
+            certificate_name = "MyACMCertificate"  
+            all_certs = acm_client.list_certificates(CertificateStatuses=['ISSUED']).get('CertificateSummaryList', [])
 
-            # Use describe_certificate to retrieve the ARN
-            response = acm_client.describe_certificate(
-                CertificateArn=certificate_id  # Use PhysicalResourceId as Certificate ARN
-            )
-            
-            # Fetch the certificate ARN from the response
-            certificate_arn = response['Certificate']['CertificateArn']
+            certificate_arn = None
+            for cert in all_certs:
+                if cert['DomainName'] == certificate_name:  # Check if the domain name matches
+                    certificate_arn = cert['CertificateArn']
+                    break
             
             if certificate_arn is None:
                 error_message = "CertificateArn is missing, cannot proceed with certificate validation."
