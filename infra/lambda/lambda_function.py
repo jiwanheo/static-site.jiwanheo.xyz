@@ -153,6 +153,9 @@ def lambda_handler(event, context):
             cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
 
             validation_options = cert_details['Certificate']['DomainValidationOptions'][0]
+
+            logger.info(f"Here's validation_options: {validation_options}")
+
             validation_record_name = validation_options['ResourceRecord']['Name']
             validation_record_value = validation_options['ResourceRecord']['Value']
 
