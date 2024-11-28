@@ -112,6 +112,23 @@ def delete_acm_certificate(certificate_arn):
     except Exception as e:
         logger.error(f"Error deleting ACM certificate: {str(e)}", exc_info=True)
 
+def wait_and_fetch_resource_record(acm_client, certificate_arn, timeout=300, interval=15):
+    """Wait until the ACM certificate includes the ResourceRecord."""
+    start_time = time.time()
+    while True:
+        cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
+        validation_options = cert_details['Certificate']['DomainValidationOptions'][0]
+        
+        # Check if the ResourceRecord is available
+        if 'ResourceRecord' in validation_options:
+            return validation_options['ResourceRecord']
+        
+        # Check for timeout
+        if time.time() - start_time > timeout:
+            logger.info("Timeout waiting for ACM certificate ResourceRecord. Will try again")
+        
+        logger.info(f"Waiting for ResourceRecord. Current status: {validation_options['ValidationStatus']}")
+        time.sleep(interval)
 
 def lambda_handler(event, context):
     """
@@ -153,14 +170,10 @@ def lambda_handler(event, context):
             
             logger.info(f"Requested certificate: {certificate_arn}")
 
-            cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
+            resource_record = wait_and_fetch_resource_record(acm_client, certificate_arn)
 
-            validation_options = cert_details['Certificate']['DomainValidationOptions'][0]
-
-            logger.info(f"Here's validation_options: {validation_options}")
-
-            validation_record_name = validation_options['ResourceRecord']['Name']
-            validation_record_value = validation_options['ResourceRecord']['Value']
+            validation_record_name = resource_record['Name']
+            validation_record_value = resource_record['Value']
 
             logger.info(f"DNS validation record: {validation_record_name} -> {validation_record_value}")
 
@@ -191,11 +204,10 @@ def lambda_handler(event, context):
                 send_response(event, context, 'FAILED', error_message)
                 return {'statusCode': 500, 'body': error_message}
             
-            cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
+            resource_record = wait_and_fetch_resource_record(acm_client, certificate_arn)
 
-            validation_options = cert_details['Certificate']['DomainValidationOptions'][0]
-            validation_record_name = validation_options['ResourceRecord']['Name']
-            validation_record_value = validation_options['ResourceRecord']['Value']
+            validation_record_name = resource_record['Name']
+            validation_record_value = resource_record['Value']
 
             logger.info(f"Deleting DNS record: {validation_record_name} -> {validation_record_value}")
             delete_dns_record(
