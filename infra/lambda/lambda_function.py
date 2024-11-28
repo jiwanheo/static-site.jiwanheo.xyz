@@ -4,7 +4,6 @@ import time
 import logging
 import urllib3
 
-
 # Set up logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -150,20 +149,23 @@ def lambda_handler(event, context):
         domain_name = props.get('DomainName')
         hosted_zone_id = props.get('HostedZoneId')
 
-
+        # Early fail, if missing properties
         if not all([domain_name, hosted_zone_id]):
             error_message = "Missing one or more required properties."
             logger.error(error_message)
             send_response(
-                    event, 
-                    context, 
-                    response_status = 'FAILED', 
-                    response_data = error_message
+                event, 
+                context, 
+                response_status = 'FAILED', 
+                response_data = {'Message': error_message}
             )
             return {'statusCode': 500, 'body': error_message}
         
+        # CREATE/UPDATE share same code, and DELETE has its own block
+        logger.info(f"Processing {event['RequestType']} request for domain: {domain_name}")
+
         if event['RequestType'] in ['Create', 'Update']:
-            logger.info(f"Processing {event['RequestType']} request for domain: {domain_name}")
+            
             response = acm_client.request_certificate(
                 DomainName=domain_name,
                 ValidationMethod='DNS',
@@ -174,6 +176,7 @@ def lambda_handler(event, context):
             certificate_arn = response['CertificateArn']
 
             # Check if CertificateArn is available before proceeding with Create or Update actions
+            ## We might want to put some re-try mechanism here
             if certificate_arn is None:
                 error_message = "CertificateArn is missing, cannot proceed with certificate validation."
                 logger.error(error_message)
@@ -181,23 +184,25 @@ def lambda_handler(event, context):
                     event, 
                     context, 
                     response_status = 'FAILED', 
-                    response_data = error_message
+                    response_data = {'Message': error_message}
                 )
                 return {'statusCode': 500, 'body': error_message}
             
             logger.info(f"Requested certificate: {certificate_arn}")
 
+            # Re-try mechanism here
             resource_record = wait_and_fetch_cert_resource_record(acm_client, certificate_arn)
             validation_record_name = resource_record['Name']
             validation_record_value = resource_record['Value']
 
-            logger.info(f"DNS validation record: {validation_record_name} -> {validation_record_value}")
-
+            
             # Create or update the DNS record for DNS validation
+            logger.info(f"DNS validation record: {validation_record_name} -> {validation_record_value}")
             create_dns_record(
                 hosted_zone_id, validation_record_name, validation_record_value
             )
 
+            # Send response to CloudFormation (Important!!! without it, it'll endlessly wait for the response that we never sent)
             send_response(
                 event, 
                 context, 
@@ -209,7 +214,6 @@ def lambda_handler(event, context):
             return {'statusCode': 200, 'body': json.dumps('Validation record processed successfully.')}
         
         elif event['RequestType'] == 'Delete':
-            logger.info(f"Deleting validation record for domain: {domain_name}")
 
             # Pull all certs, and delete the one that matches the name of this stack's cert.
             domain_name = "static-site.jiwanheo.xyz"  
@@ -228,12 +232,11 @@ def lambda_handler(event, context):
                     event, 
                     context, 
                     response_status = 'FAILED', 
-                    response_data = error_message
+                    response_data = {'Message': error_message}
                 )
                 return {'statusCode': 500, 'body': error_message}
             
-            resource_record = wait_and_fetch_resource_record(acm_client, certificate_arn)
-
+            resource_record = wait_and_fetch_cert_resource_record(acm_client, certificate_arn)
             validation_record_name = resource_record['Name']
             validation_record_value = resource_record['Value']
 
@@ -259,5 +262,11 @@ def lambda_handler(event, context):
 
     except Exception as e:
         logger.error(f"Error processing validation: {str(e)}", exc_info=True)
-        send_response(event, context, 'FAILED', f"Error: {str(e)}")
+        send_response(
+            event, 
+            context, 
+            response_status = 'FAILED', 
+            response_data = {'Message': f"Error: {str(e)}"}
+        )
+
         return {'statusCode': 500, 'body': json.dumps(f"Error: {str(e)}")}
