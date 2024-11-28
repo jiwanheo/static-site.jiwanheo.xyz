@@ -22,6 +22,7 @@ Resources:
                   - acm:RequestCertificate
                   - acm:DescribeCertificate
                   - acm:DeleteCertificate
+                  - acm:list_certificates
                   - route53:ChangeResourceRecordSets
                   - route53:GetChange
                   - route53:ListResourceRecordSets
