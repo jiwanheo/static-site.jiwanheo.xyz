@@ -175,6 +175,7 @@ def lambda_handler(event, context):
             certificate_name = "MyACMCertificate"  
             all_certs = acm_client.list_certificates(CertificateStatuses=['ISSUED']).get('CertificateSummaryList', [])
 
+            logger.info(f"Here's all the certs: {all_certs}")
             certificate_arn = None
             for cert in all_certs:
                 if cert['DomainName'] == certificate_name:  # Check if the domain name matches
