@@ -98,26 +98,6 @@ def delete_dns_record(hosted_zone_id, record_name, record_value):
     logger.info("DNS record deleted successfully.")
 
 
-def wait_for_validation(certificate_arn):
-    """
-    Wait for the ACM certificate to be validated.
-    """
-    while True:
-        response = acm_client.describe_certificate(CertificateArn=certificate_arn)
-        certificate = response.get('Certificate', {})
-        status = certificate.get('Status', 'PENDING_VALIDATION')
-
-        if status == 'ISSUED':
-            logger.info("Certificate validation successful.")
-            return True
-        elif status == 'FAILED':
-            logger.error("Certificate validation failed.")
-            raise Exception("Certificate validation failed.")
-        
-        logger.info("Waiting for certificate validation to complete...")
-        time.sleep(30)
-
-
 def delete_acm_certificate(certificate_arn):
     """
     Delete the ACM certificate if it exists and is valid.
@@ -140,53 +120,79 @@ def lambda_handler(event, context):
 
         # Extract parameters from the event
         props = event.get('ResourceProperties', {})
-        certificate_arn = event.get('ResourceProperties', {}).get('CertificateArn', None)
-        hosted_zone_id = props.get('HostedZoneId')
         domain_name = props.get('DomainName')
-        validation_record_name = props.get('ValidationRecordName')
-        validation_record_value = props.get('ValidationRecordValue')
+        hosted_zone_id = props.get('HostedZoneId')
 
-        if not all([hosted_zone_id, domain_name, validation_record_name, validation_record_value]):
+
+        if not all([domain_name, hosted_zone_id]):
             error_message = "Missing one or more required properties."
-            logger.error(error_message)
-            send_response(event, context, 'FAILED', error_message)
-            return {'statusCode': 500, 'body': error_message}
-        
-        # Check if CertificateArn is available before proceeding with Create or Update actions
-        if certificate_arn is None and event['RequestType'] in ['Create', 'Update']:
-            error_message = "CertificateArn is missing, cannot proceed with certificate validation."
             logger.error(error_message)
             send_response(event, context, 'FAILED', error_message)
             return {'statusCode': 500, 'body': error_message}
         
         if event['RequestType'] in ['Create', 'Update']:
             logger.info(f"Processing {event['RequestType']} request for domain: {domain_name}")
+            response = acm_client.request_certificate(
+                DomainName=domain_name,
+                ValidationMethod='DNS',
+                SubjectAlternativeNames=[domain_name],
+                Options={'CertificateTransparencyLoggingPreference': 'ENABLED'}
+            )
 
-            # Create or update the DNS validation record
+            certificate_arn = response['CertificateArn']
+
+            # Check if CertificateArn is available before proceeding with Create or Update actions
+            if certificate_arn is None:
+                error_message = "CertificateArn is missing, cannot proceed with certificate validation."
+                logger.error(error_message)
+                send_response(event, context, 'FAILED', error_message)
+                return {'statusCode': 500, 'body': error_message}
+            
+            logger.info(f"Requested certificate: {certificate_arn}")
+
+            cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
+            validation_options = cert_details['Certificate']['DomainValidationOptions'][0]
+            validation_record_name = validation_options['ResourceRecord']['Name']
+            validation_record_value = validation_options['ResourceRecord']['Value']
+
+            logger.info(f"DNS validation record: {validation_record_name} -> {validation_record_value}")
+
+            # Create or update the DNS record for DNS validation
             create_dns_record(
                 hosted_zone_id, validation_record_name, validation_record_value
             )
 
-            # Wait for ACM certificate validation if certificate_arn exists
-            if certificate_arn:
-                logger.info(f"Waiting for ACM certificate validation: {certificate_arn}")
-                wait_for_validation(certificate_arn)
+            send_response(event, context, 'SUCCESS', "Validation record processed successfully.")
+            return {'statusCode': 200, 'body': json.dumps('Validation record processed successfully.')}
         
         elif event['RequestType'] == 'Delete':
             logger.info(f"Deleting validation record for domain: {domain_name}")
+            logger.info(f"Here's the event: {event}")
 
-            # Delete the DNS validation record
-            delete_dns_record(
-                hosted_zone_id, validation_record_name, validation_record_value
-            )
+            send_response(event, context, 'FAILED', error_message)
+            return {'statusCode': 500, 'body': error_message}
 
-            # If certificate_arn is available, we can proceed with certificate deletion
-            if certificate_arn:
-                delete_acm_certificate(certificate_arn)
+            # # Ensure that CNAME validation info is available (either stored or passed in event)
+            # if certificate_arn:
+            #     # Re-fetch CNAME information again to ensure we have it for deletion
+            #     cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
+            #     validation_options = cert_details['Certificate']['DomainValidationOptions'][0]
+            #     validation_record_name = validation_options['ResourceRecord']['Name']
+            #     validation_record_value = validation_options['ResourceRecord']['Value']
+                
+            #     logger.info(f"Deleting DNS record: {validation_record_name} -> {validation_record_value}")
 
-        logger.info("Successfully processed validation record.")
-        send_response(event, context, 'SUCCESS', "Validation record processed successfully.")
-        return {'statusCode': 200, 'body': json.dumps('Validation record processed successfully.')}
+            #     # Delete the DNS record
+            #     delete_dns_record(
+            #         hosted_zone_id, validation_record_name, validation_record_value
+            #     )
+
+            #     # Delete the ACM certificate
+            #     delete_acm_certificate(certificate_arn)
+
+            # send_response(event, context, 'SUCCESS', "Validation record and certificate deleted successfully.")
+            # return {'statusCode': 200, 'body': json.dumps("Validation record and certificate deleted successfully.")}
+
 
     except Exception as e:
         logger.error(f"Error processing validation: {str(e)}", exc_info=True)
