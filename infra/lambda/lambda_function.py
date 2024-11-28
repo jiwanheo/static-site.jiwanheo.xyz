@@ -152,8 +152,6 @@ def lambda_handler(event, context):
 
             cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
 
-            logger.info(f"Here's cert_details: {cert_details}")
-
             validation_options = cert_details['Certificate']['DomainValidationOptions'][0]
             validation_record_name = validation_options['ResourceRecord']['Name']
             validation_record_value = validation_options['ResourceRecord']['Value']
@@ -186,7 +184,12 @@ def lambda_handler(event, context):
                 logger.error(error_message)
                 send_response(event, context, 'FAILED', error_message)
                 return {'statusCode': 500, 'body': error_message}
+            
+            cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
 
+            validation_options = cert_details['Certificate']['DomainValidationOptions'][0]
+            validation_record_name = validation_options['ResourceRecord']['Name']
+            validation_record_value = validation_options['ResourceRecord']['Value']
 
             logger.info(f"Deleting DNS record: {validation_record_name} -> {validation_record_value}")
             delete_dns_record(
