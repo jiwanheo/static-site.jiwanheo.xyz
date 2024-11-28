@@ -42,7 +42,10 @@ def send_response(event, context, response_status, response_data):
             headers={'Content-Type': 'application/json'}
         )
 
-        logger.info(f"Sending to CloudFormation response: {response.status}")
+        logger.info(f"Sending to CloudFormation response: {response_status}")
+
+        return response
+    
     except Exception as e:
         logger.error(f"Failed to send response to CloudFormation: {str(e)}")
 
