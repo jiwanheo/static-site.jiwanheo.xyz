@@ -42,7 +42,8 @@ def send_response(event, context, response_status, response_data):
             headers={'Content-Type': 'application/json'}
         )
 
-        logger.info(f"Response sent to CloudFormation: {response.status_code}")
+        logger.info(f"Here's response from send_response: {response}")
+        # logger.info(f"Response sent to CloudFormation: {response.status_code}")
     except Exception as e:
         logger.error(f"Failed to send response to CloudFormation: {str(e)}")
 
@@ -170,31 +171,34 @@ def lambda_handler(event, context):
         
         elif event['RequestType'] == 'Delete':
             logger.info(f"Deleting validation record for domain: {domain_name}")
-            logger.info(f"Here's the event: {event}")
+            
+            certificate_id = event['PhysicalResourceId']
+            # Use describe_certificate to retrieve the ARN
+            response = acm_client.describe_certificate(
+                CertificateArn=certificate_id  # Use PhysicalResourceId as Certificate ARN
+            )
+            
+            # Fetch the certificate ARN from the response
+            certificate_arn = response['Certificate']['CertificateArn']
+            
+            if certificate_arn is None:
+                error_message = "CertificateArn is missing, cannot proceed with certificate validation."
+                logger.error(error_message)
+                send_response(event, context, 'FAILED', error_message)
+                return {'statusCode': 500, 'body': error_message}
 
-            send_response(event, context, 'FAILED', error_message)
-            return {'statusCode': 500, 'body': error_message}
 
-            # # Ensure that CNAME validation info is available (either stored or passed in event)
-            # if certificate_arn:
-            #     # Re-fetch CNAME information again to ensure we have it for deletion
-            #     cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
-            #     validation_options = cert_details['Certificate']['DomainValidationOptions'][0]
-            #     validation_record_name = validation_options['ResourceRecord']['Name']
-            #     validation_record_value = validation_options['ResourceRecord']['Value']
-                
-            #     logger.info(f"Deleting DNS record: {validation_record_name} -> {validation_record_value}")
+            logger.info(f"Deleting DNS record: {validation_record_name} -> {validation_record_value}")
+            delete_dns_record(
+                hosted_zone_id, validation_record_name, validation_record_value
+            )
 
-            #     # Delete the DNS record
-            #     delete_dns_record(
-            #         hosted_zone_id, validation_record_name, validation_record_value
-            #     )
+            logger.info(f"Deleting certificate: {certificate_arn}")
+            delete_acm_certificate(certificate_arn)
+        
+            send_response(event, context, 'SUCCESS', "Validation record and certificate deleted successfully.")
+            return {'statusCode': 200, 'body': json.dumps("Validation record and certificate deleted successfully.")}
 
-            #     # Delete the ACM certificate
-            #     delete_acm_certificate(certificate_arn)
-
-            # send_response(event, context, 'SUCCESS', "Validation record and certificate deleted successfully.")
-            # return {'statusCode': 200, 'body': json.dumps("Validation record and certificate deleted successfully.")}
 
 
     except Exception as e:
