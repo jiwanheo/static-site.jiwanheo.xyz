@@ -42,8 +42,7 @@ def send_response(event, context, response_status, response_data):
             headers={'Content-Type': 'application/json'}
         )
 
-        logger.info(f"Here's response from send_response: {response}")
-        # logger.info(f"Response sent to CloudFormation: {response.status_code}")
+        logger.info(f"Here's response from send_response: {response.status}")
     except Exception as e:
         logger.error(f"Failed to send response to CloudFormation: {str(e)}")
 
@@ -173,6 +172,9 @@ def lambda_handler(event, context):
             logger.info(f"Deleting validation record for domain: {domain_name}")
             
             certificate_id = event['PhysicalResourceId']
+
+            logger.info(f"Here's the physicalResourceId: {certificate_id}")
+
             # Use describe_certificate to retrieve the ARN
             response = acm_client.describe_certificate(
                 CertificateArn=certificate_id  # Use PhysicalResourceId as Certificate ARN
