@@ -172,13 +172,12 @@ def lambda_handler(event, context):
             logger.info(f"Deleting validation record for domain: {domain_name}")
 
             # Pull all certs, and delete the one that matches the name of this stack's cert.
-            certificate_name = "MyACMCertificate"  
+            domain_name = "static-site.jiwanheo.xyz"  
             all_certs = acm_client.list_certificates(CertificateStatuses=['ISSUED']).get('CertificateSummaryList', [])
 
-            logger.info(f"Here's all the certs: {all_certs}")
             certificate_arn = None
             for cert in all_certs:
-                if cert['DomainName'] == certificate_name:  # Check if the domain name matches
+                if cert['DomainName'] == domain_name:  # Check if the domain name matches
                     certificate_arn = cert['CertificateArn']
                     break
             
