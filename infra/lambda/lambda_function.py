@@ -211,21 +211,7 @@ def lambda_handler(event, context):
             return {'statusCode': 200, 'body': json.dumps('Validation record processed successfully.')}
         
         elif event['RequestType'] == 'Delete':
-            certificate_arn1 = event['PhysicalResourceId']
-            logger.info(f"from event payload, arn is: {certificate_arn1}")
-            # Pull all certs, and delete the one that matches the name of this stack's cert.
-            domain_name = "static-site.jiwanheo.xyz"  
-            all_certs = acm_client.list_certificates(CertificateStatuses=['ISSUED']).get('CertificateSummaryList', [])
-
-            certificate_arn = None
-            for cert in all_certs:
-                if cert['DomainName'] == domain_name:  # Check if the domain name matches
-                    certificate_arn = cert['CertificateArn']
-                    break
-
-            logger.info(f"from doing a match, arn is: {certificate_arn}")
-
-            if certificate_arn is None:
+            if event['PhysicalResourceId'] is None:
                 error_message = "CertificateArn is missing, cannot proceed with certificate validation."
                 logger.error(error_message)
                 send_response(
@@ -236,6 +222,8 @@ def lambda_handler(event, context):
                 )
                 return {'statusCode': 500, 'body': error_message}
             
+            certificate_arn = event['PhysicalResourceId']
+                        
             resource_record = wait_and_fetch_cert_resource_record(acm_client, certificate_arn)
             validation_record_name = resource_record['Name']
             validation_record_value = resource_record['Value']
