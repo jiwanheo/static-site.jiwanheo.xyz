@@ -65,8 +65,9 @@ Resources:
       DomainName: static-site.jiwanheo.xyz
       HostedZoneId: Z066358329E65RHIEOJXQ
       Region: us-east-1
-# Outputs:
-#   CertificateArn:
-#     Value: !GetAtt MyACMCertificate.PhysicalResourceId
-#     Export:
-#       Name: MySSLCertificateStack-CertificateArn
+
+Outputs:
+  CertificateArn:
+    Value: !GetAtt MyACMCertificate.physical_resource_id
+    Export:
+      Name: MySSLCertificateStack-CertificateArn
