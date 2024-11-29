@@ -37,6 +37,21 @@ Resources:
         HttpVersion: http2
         PriceClass: PriceClass_100 # Use the cheapest price class (optional)
 
+  # S3 Bucket Policy to allow CloudFront access
+  CloudFrontAccessS3Policy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !ImportValue StaticSiteS3BucketName
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowCloudFrontAccess"
+            Effect: "Allow"
+            Principal:
+              AWS: !Sub arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${MyCloudFrontOAI}
+            Action: "s3:GetObject"
+            Resource: !Sub arn:aws:s3:::${StaticSiteS3BucketName}/*
+
   Route53DNSRecord:
     Type: AWS::Route53::RecordSet
     Properties:

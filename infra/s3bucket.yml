@@ -14,6 +14,12 @@ Resources:
         Status: Enabled # Enable versioning if needed
 
 Outputs:
+  S3BucketName:
+    Value: !Ref S3ForStaticSite
+    Description: "The name of the S3 bucket"
+    Export:
+      Name: StaticSiteS3BucketName
+
   S3DomainName:
     Value: !GetAtt S3ForStaticSite.DomainName
     Export:
