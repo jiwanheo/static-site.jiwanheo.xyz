@@ -20,9 +20,6 @@ def send_response(event, context, response_status, response_data, physical_resou
     Sends a response to CloudFormation indicating success or failure.
     """
 
-    logger.info(f"In send_response, context.log_stream_name: {context.log_stream_name}")
-    logger.info(f"In send_response, physical_resource_id: {physical_resource_id}")
-
     # Use provided PhysicalResourceId or default to log_stream_name
     physical_resource_id = physical_resource_id or context.log_stream_name
 
@@ -214,7 +211,8 @@ def lambda_handler(event, context):
             return {'statusCode': 200, 'body': json.dumps('Validation record processed successfully.')}
         
         elif event['RequestType'] == 'Delete':
-
+            certificate_arn1 = event['PhysicalResourceId']
+            logger.info(f"from event payload, arn is: {certificate_arn1}")
             # Pull all certs, and delete the one that matches the name of this stack's cert.
             domain_name = "static-site.jiwanheo.xyz"  
             all_certs = acm_client.list_certificates(CertificateStatuses=['ISSUED']).get('CertificateSummaryList', [])
@@ -224,7 +222,9 @@ def lambda_handler(event, context):
                 if cert['DomainName'] == domain_name:  # Check if the domain name matches
                     certificate_arn = cert['CertificateArn']
                     break
-            
+
+            logger.info(f"from doing a match, arn is: {certificate_arn}")
+
             if certificate_arn is None:
                 error_message = "CertificateArn is missing, cannot proceed with certificate validation."
                 logger.error(error_message)
