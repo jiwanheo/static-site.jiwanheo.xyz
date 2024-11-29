@@ -19,7 +19,9 @@ Resources:
           - Id: S3Origin
             DomainName: !ImportValue S3BucketDomainName
             S3OriginConfig:
-              OriginAccessControlId: !Ref MyCloudFrontOAC # Use OAC here
+              # AWS docs instruct to leave this field empty if using OAC instead of OAI
+              OriginAccessIdentity: ""
+            OriginAccessControlId: !Ref MyCloudFrontOAC # Use OAC here
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: redirect-to-https # Ensure HTTPS is enforced
