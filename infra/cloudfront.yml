@@ -4,7 +4,8 @@ Resources:
   MyCloudFrontOAI:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
-      Comment: "OAI for S3 bucket access"
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: "OAI for S3 bucket access"
 
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
