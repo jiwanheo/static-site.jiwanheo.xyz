@@ -54,9 +54,12 @@ Resources:
           - Sid: "AllowCloudFrontAccess"
             Effect: "Allow"
             Principal:
-              AWS: !Sub arn:aws:iam::cloudfront:user/CloudFront Origin Access Control ${MyCloudFrontOAC}
+              Service: "cloudfront.amazonaws.com"
             Action: "s3:GetObject"
             Resource: arn:aws:s3:::static-site.jiwanheo.xyz/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: "arn:aws:cloudfront::752286769980:distribution/E254MBU6ONZLYB"
 
   Route53DNSRecord:
     Type: AWS::Route53::RecordSet
