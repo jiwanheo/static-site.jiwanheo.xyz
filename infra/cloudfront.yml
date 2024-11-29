@@ -13,7 +13,7 @@ Resources:
       DistributionConfig:
         Origins:
           - Id: S3Origin
-            DomainName: !ImportValue S3BucketDomainName
+            DomainName: static-site.jiwanheo.xyz
             S3OriginConfig:
               OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${MyCloudFrontOAI}"
         DefaultCacheBehavior:
@@ -41,7 +41,7 @@ Resources:
   CloudFrontAccessS3Policy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !ImportValue StaticSiteS3BucketName
+      Bucket: static-site.jiwanheo.xyz
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
