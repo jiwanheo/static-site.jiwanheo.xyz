@@ -50,7 +50,7 @@ Resources:
             Principal:
               AWS: !Sub arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${MyCloudFrontOAI}
             Action: "s3:GetObject"
-            Resource: !Sub arn:aws:s3:::${StaticSiteS3BucketName}/*
+            Resource: arn:aws:s3:::static-site.jiwanheo.xyz/*
 
   Route53DNSRecord:
     Type: AWS::Route53::RecordSet
