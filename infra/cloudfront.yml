@@ -1,11 +1,13 @@
 Description: Set up CloudFront Distribution and Route53 DNS for the static site
 
 Resources:
-  MyCloudFrontOAI:
-    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+  MyCloudFrontOAC:
+    Type: AWS::CloudFront::OriginAccessControl
     Properties:
-      CloudFrontOriginAccessIdentityConfig:
-        Comment: "OAI for S3 bucket access"
+      OriginAccessControlConfig:
+        Description: "OAC for S3 bucket access"
+        SigningBehavior: "never" # Can be "always" for signed URLs (for signed content)
+        SigningProtocol: "sigv4" # Use AWS Signature Version 4 (sigv4)
 
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
@@ -15,7 +17,7 @@ Resources:
           - Id: S3Origin
             DomainName: !ImportValue S3BucketDomainName
             S3OriginConfig:
-              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${MyCloudFrontOAI}"
+              OriginAccessControlId: !Ref MyCloudFrontOAC # Use OAC here
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: redirect-to-https # Ensure HTTPS is enforced
@@ -48,7 +50,7 @@ Resources:
           - Sid: "AllowCloudFrontAccess"
             Effect: "Allow"
             Principal:
-              AWS: !Sub arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${MyCloudFrontOAI}
+              AWS: !Sub arn:aws:iam::cloudfront:user/CloudFront Origin Access Control ${MyCloudFrontOAC}
             Action: "s3:GetObject"
             Resource: arn:aws:s3:::static-site.jiwanheo.xyz/*
 
