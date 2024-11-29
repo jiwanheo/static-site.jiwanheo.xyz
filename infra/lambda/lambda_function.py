@@ -120,6 +120,10 @@ def wait_and_fetch_cert_resource_record(acm_client, certificate_arn, timeout=300
     start_time = time.time()
     while True:
         cert_details = acm_client.describe_certificate(CertificateArn=certificate_arn)
+
+        logger.info(f"cert_details: {cert_details}")
+
+
         validation_options = cert_details['Certificate']['DomainValidationOptions'][0]
         
         # Check if the ResourceRecord is available
