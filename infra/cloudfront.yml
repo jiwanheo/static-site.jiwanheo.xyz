@@ -7,6 +7,7 @@ Resources:
       OriginAccessControlConfig:
         Name: "CloudFrontOAC"
         Description: "OAC for S3 bucket access"
+        OriginAccessControlOriginType: "s3"
         SigningBehavior: "never" # Can be "always" for signed URLs (for signed content)
         SigningProtocol: "sigv4" # Use AWS Signature Version 4 (sigv4)
 
