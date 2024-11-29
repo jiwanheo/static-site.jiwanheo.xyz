@@ -204,7 +204,10 @@ def lambda_handler(event, context):
                 event, 
                 context, 
                 response_status = 'SUCCESS', 
-                response_data = {'Message': 'ACM Certificate created and validated.'},
+                response_data = {
+                    'Message': 'ACM Certificate created and validated.',
+                    'CertificateArn': certificate_arn
+                },
                 physical_resource_id=certificate_arn
             )
             
@@ -240,7 +243,10 @@ def lambda_handler(event, context):
                 event, 
                 context, 
                 response_status = 'SUCCESS', 
-                response_data = {'Message': "Validation record and certificate deleted successfully."},
+                response_data = {
+                    'Message': "Validation record and certificate deleted successfully.",
+                    'CertificateArn': certificate_arn
+                },
                 physical_resource_id=certificate_arn
             )
 

@@ -68,6 +68,6 @@ Resources:
 
 Outputs:
   CertificateArn:
-    Value: !GetAtt MyACMCertificate.physical_resource_id
+    Value: !GetAtt MyACMCertificate.CertificateArn
     Export:
       Name: MySSLCertificateStack-CertificateArn
