@@ -1,0 +1,43 @@
+Description: Set up CloudFront Distribution and Route53 DNS for the static site
+
+Resources:
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: static-site.jiwanheo.xyz.s3.amazonaws.com
+            Id: S3Origin
+            S3OriginConfig: {} # Necessary for S3 as the origin
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https # Ensure HTTPS is enforced
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          ForwardedValues:
+            QueryString: false # Do not forward query strings to S3
+            Cookies:
+              Forward: none # Do not forward cookies
+        ViewerCertificate:
+          AcmCertificateArn: !ImportValue MySSLCertificateStack-CertificateArn
+          SslSupportMethod: sni-only
+        Enabled: true
+        DefaultRootObject: index.html
+        HttpVersion: http2
+        PriceClass: PriceClass_100 # Use the cheapest price class (optional)
+
+  Route53DNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: Z066358329E65RHIEOJXQ # Replace with your actual hosted zone ID
+      Name: static-site.jiwanheo.xyz
+      Type: A
+
+Outputs:
+  CloudFrontDomainName:
+    Description: CloudFront Distribution Domain Name
+    Value: !GetAtt CloudFrontDistribution.DomainName

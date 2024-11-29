@@ -44,3 +44,11 @@ jobs:
             --template-file infra/sslcert.yml \
             --stack-name MySSLCertificateStack \
             --capabilities CAPABILITY_NAMED_IAM
+
+      # Step 6: Deploy CloudFront Stack
+      - name: Deploy CloudFront Stack
+        run: |
+          aws cloudformation deploy \
+            --template-file infra/cloudfront.yml \
+            --stack-name CloudFrontStack \
+            --capabilities CAPABILITY_NAMED_IAM
