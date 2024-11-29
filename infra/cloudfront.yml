@@ -1,14 +1,20 @@
 Description: Set up CloudFront Distribution and Route53 DNS for the static site
 
 Resources:
+  MyCloudFrontOAI:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      Comment: "OAI for S3 bucket access"
+
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
         Origins:
-          - DomainName: static-site.jiwanheo.xyz.s3.amazonaws.com
-            Id: S3Origin
-            S3OriginConfig: {} # Necessary for S3 as the origin
+          - Id: S3Origin
+            DomainName: !GetAtt S3ForStaticSite.DomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${MyCloudFrontOAI}"
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: redirect-to-https # Ensure HTTPS is enforced
