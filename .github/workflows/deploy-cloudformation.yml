@@ -37,7 +37,7 @@ jobs:
           zip -r lambda_function.zip lambda_function.py
           aws s3 cp lambda_function.zip s3://lambda-for-static-site.jiwanheo.xyz/lambda_function.zip
 
-      # Step 4: Deploy SSL Certificate Stack
+      # Step 5: Deploy SSL Certificate Stack
       - name: Deploy SSL Certificate Stack
         run: |
           aws cloudformation deploy \

@@ -24,8 +24,6 @@ Resources:
                   - acm:DeleteCertificate
                   - acm:ListCertificates
                   - route53:ChangeResourceRecordSets
-                  - route53:GetChange
-                  - route53:ListResourceRecordSets
                 Resource: "*"
         - PolicyName: LambdaS3AccessPolicy
           PolicyDocument:
