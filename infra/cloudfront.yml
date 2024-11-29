@@ -36,8 +36,7 @@ Resources:
       HostedZoneId: Z066358329E65RHIEOJXQ # Replace with your actual hosted zone ID
       Name: static-site.jiwanheo.xyz
       Type: A
-
-Outputs:
-  CloudFrontDomainName:
-    Description: CloudFront Distribution Domain Name
-    Value: !GetAtt CloudFrontDistribution.DomainName
+# Outputs:
+#   CloudFrontDomainName:
+#     Description: CloudFront Distribution Domain Name
+#     Value: !GetAtt CloudFrontDistribution.DomainName
