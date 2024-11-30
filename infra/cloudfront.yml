@@ -72,6 +72,7 @@ Resources:
         Logging:
           IncludeCookies: false
           Bucket: !ImportValue CloudFrontLogS3BucketNameDomainName # S3 Bucket Policy to allow CloudFront access
+          Prefix: "cloudfront-logs/"
 
   CloudFrontAccessS3Policy:
     Type: AWS::S3::BucketPolicy

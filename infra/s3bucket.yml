@@ -21,6 +21,7 @@ Resources:
       BucketName: cloudfront-logs.jiwanheo.xyz
       VersioningConfiguration:
         Status: Enabled # Enable versioning if needed
+      AccessControl: LogDeliveryWrite
 
   CloudFrontLogBucketPolicy:
     Type: AWS::S3::BucketPolicy
