@@ -30,10 +30,10 @@ Resources:
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Sid: "AllowCloudWatchLogs"
+          - Sid: "AllowCloudFrontLogs"
             Effect: "Allow"
             Principal:
-              Service: "logs.amazonaws.com"
+              Service: "cloudfront.amazonaws.com"
             Action: "s3:PutObject"
             Resource: !Sub "arn:aws:s3:::${S3ForCloudFrontLogs}/*"
             Condition:
