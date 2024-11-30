@@ -1,32 +1,35 @@
 Description: Set up CloudFront Distribution and Route53 DNS for the static site
 
 Resources:
-  CloudFrontLogsGroup:
-    Type: AWS::Logs::LogGroup
+  S3ForCloudFrontLogs:
+    Type: AWS::S3::Bucket
     Properties:
-      LogGroupName: /aws/cloudfront/static-site-logs
-      RetentionInDays: 7
+      BucketName: cloudfront-logs.jiwanheo.xyz
+      VersioningConfiguration:
+        Status: Enabled # Enable versioning if needed
+      AccessControl: LogDeliveryWrite
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
 
-  CloudFrontLoggingRole:
-    Type: AWS::IAM::Role
+  CloudFrontLogBucketPolicy:
+    Type: AWS::S3::BucketPolicy
     Properties:
-      AssumeRolePolicyDocument:
+      Bucket: !Ref S3ForCloudFrontLogs
+      PolicyDocument:
         Version: "2012-10-17"
         Statement:
-          - Effect: "Allow"
+          - Sid: "AllowCloudFrontLogs"
+            Effect: "Allow"
             Principal:
               Service: "cloudfront.amazonaws.com"
-            Action: "sts:AssumeRole"
-      Policies:
-        - PolicyName: "CloudFrontLoggingPolicy"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: "Allow"
-                Action:
-                  - "logs:CreateLogStream"
-                  - "logs:PutLogEvents"
-                Resource: !GetAtt CloudFrontLogsGroup.Arn
+            Action: "s3:PutObject"
+            Resource: !Sub "arn:aws:s3:::${S3ForCloudFrontLogs}/*"
+            Condition:
+              StringEquals:
+                "AWS:SourceArn": !GetAtt CloudFrontDistribution.Arn
 
   MyCloudFrontOAC:
     Type: AWS::CloudFront::OriginAccessControl
@@ -49,6 +52,7 @@ Resources:
               # AWS docs instruct to leave this field empty if using OAC instead of OAI
               OriginAccessIdentity: ""
             OriginAccessControlId: !Ref MyCloudFrontOAC # Use OAC here
+        enabled: true
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: redirect-to-https # Ensure HTTPS is enforced
@@ -65,31 +69,13 @@ Resources:
         ViewerCertificate:
           AcmCertificateArn: !ImportValue MySSLCertificateStack-CertificateArn
           SslSupportMethod: sni-only
-        Enabled: true
         DefaultRootObject: index.html
         HttpVersion: http2
         PriceClass: PriceClass_100 # Use the cheapest price class (optional)
         Logging:
-          IncludeCookies: false
           Bucket: !ImportValue CloudFrontLogS3BucketNameDomainName # S3 Bucket Policy to allow CloudFront access
+          IncludeCookies: false
           Prefix: "cloudfront-logs/"
-
-  CloudFrontAccessS3Policy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: static-site.jiwanheo.xyz
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: "AllowCloudFrontAccess"
-            Effect: "Allow"
-            Principal:
-              Service: "cloudfront.amazonaws.com"
-            Action: "s3:GetObject"
-            Resource: arn:aws:s3:::static-site.jiwanheo.xyz/*
-            Condition:
-              StringEquals:
-                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}
 
   # Route53DNSRecord:
   #   Type: AWS::Route53::RecordSet

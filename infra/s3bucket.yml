@@ -15,31 +15,6 @@ Resources:
       VersioningConfiguration:
         Status: Enabled # Enable versioning if needed
 
-  S3ForCloudFrontLogs:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: cloudfront-logs.jiwanheo.xyz
-      VersioningConfiguration:
-        Status: Enabled # Enable versioning if needed
-      AccessControl: LogDeliveryWrite
-
-  CloudFrontLogBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref S3ForCloudFrontLogs
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: "AllowCloudFrontLogs"
-            Effect: "Allow"
-            Principal:
-              Service: "cloudfront.amazonaws.com"
-            Action: "s3:PutObject"
-            Resource: !Sub "arn:aws:s3:::${S3ForCloudFrontLogs}/*"
-            Condition:
-              StringEquals:
-                aws:SourceAccount: !Sub "${AWS::AccountId}"
-
 Outputs:
   S3BucketName:
     Value: !Ref S3ForStaticSite
@@ -52,8 +27,3 @@ Outputs:
     Export:
       Name: S3BucketDomainName # This name will be referenced by other stacks
 
-  CloudFrontLogBucketDomainName:
-    Value: !GetAtt S3ForCloudFrontLogs.DomainName
-    Description: "The name of the S3 bucket"
-    Export:
-      Name: CloudFrontLogS3BucketNameDomainName
