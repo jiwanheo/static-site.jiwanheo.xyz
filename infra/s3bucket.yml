@@ -15,6 +15,13 @@ Resources:
       VersioningConfiguration:
         Status: Enabled # Enable versioning if needed
 
+  S3ForCloudFrontLogs:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: cloudfront-logs.jiwanheo.xyz
+      VersioningConfiguration:
+        Status: Enabled # Enable versioning if needed
+
 Outputs:
   S3BucketName:
     Value: !Ref S3ForStaticSite
@@ -26,3 +33,9 @@ Outputs:
     Value: !GetAtt S3ForStaticSite.DomainName
     Export:
       Name: S3BucketDomainName # This name will be referenced by other stacks
+
+  CloudFrontLogBucket:
+    Value: !Ref S3ForCloudFrontLogs
+    Description: "The name of the S3 bucket"
+    Export:
+      Name: CloudFrontLogS3BucketName

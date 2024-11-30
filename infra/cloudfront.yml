@@ -70,11 +70,9 @@ Resources:
         HttpVersion: http2
         PriceClass: PriceClass_100 # Use the cheapest price class (optional)
         Logging:
-          Enabled: true
           IncludeCookies: false
-          Role: !GetAtt CloudFrontLoggingRole.Arn
+          Bucket: !ImportValue CloudFrontLogS3BucketName # S3 Bucket Policy to allow CloudFront access
 
-  # S3 Bucket Policy to allow CloudFront access
   CloudFrontAccessS3Policy:
     Type: AWS::S3::BucketPolicy
     Properties:
