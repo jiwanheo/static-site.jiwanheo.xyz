@@ -71,7 +71,7 @@ Resources:
         PriceClass: PriceClass_100 # Use the cheapest price class (optional)
         Logging:
           IncludeCookies: false
-          Bucket: !ImportValue CloudFrontLogS3BucketName # S3 Bucket Policy to allow CloudFront access
+          Bucket: !ImportValue CloudFrontLogS3BucketNameDomainName # S3 Bucket Policy to allow CloudFront access
 
   CloudFrontAccessS3Policy:
     Type: AWS::S3::BucketPolicy

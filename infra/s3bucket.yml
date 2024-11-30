@@ -34,8 +34,8 @@ Outputs:
     Export:
       Name: S3BucketDomainName # This name will be referenced by other stacks
 
-  CloudFrontLogBucket:
-    Value: !Ref S3ForCloudFrontLogs
+  CloudFrontLogBucketDomainName:
+    Value: !GetAtt S3ForCloudFrontLogs.DomainName
     Description: "The name of the S3 bucket"
     Export:
-      Name: CloudFrontLogS3BucketName
+      Name: CloudFrontLogS3BucketNameDomainName
