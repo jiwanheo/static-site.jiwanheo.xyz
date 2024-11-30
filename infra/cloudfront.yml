@@ -73,7 +73,7 @@ Resources:
         HttpVersion: http2
         PriceClass: PriceClass_100 # Use the cheapest price class (optional)
         Logging:
-          Bucket: !ImportValue CloudFrontLogS3BucketNameDomainName # S3 Bucket Policy to allow CloudFront access
+          Bucket: !Sub "${S3ForCloudFrontLogs}.s3.amazonaws.com"
           IncludeCookies: false
           Prefix: "cloudfront-logs/"
 
