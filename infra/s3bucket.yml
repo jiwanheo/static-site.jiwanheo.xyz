@@ -5,6 +5,8 @@ Resources:
       BucketName: static-site.jiwanheo.xyz
       VersioningConfiguration:
         Status: Enabled # Enable versioning if needed
+      WebsiteConfiguration:
+        IndexDocument: index.html
 
   S3ForLambda:
     Type: AWS::S3::Bucket
