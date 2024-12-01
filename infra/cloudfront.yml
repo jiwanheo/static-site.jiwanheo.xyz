@@ -37,7 +37,7 @@ Resources:
             S3OriginConfig:
               # AWS docs instruct to leave this field empty if using OAC instead of OAI
               OriginAccessIdentity: ""
-            OriginAccessControlId: !Ref MyCloudFrontOAC.Id # Use OAC here
+            OriginAccessControlId: !Ref MyCloudFrontOAC # Use OAC here
         Enabled: true
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
