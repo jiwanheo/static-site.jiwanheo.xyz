@@ -37,7 +37,7 @@ Resources:
             S3OriginConfig:
               # AWS docs instruct to leave this field empty if using OAC instead of OAI
               OriginAccessIdentity: ""
-            OriginAccessControlId: !Ref MyCloudFrontOAC # Use OAC here
+            OriginAccessControlId: !Ref MyCloudFrontOAC.Id # Use OAC here
         Enabled: true
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
@@ -76,6 +76,23 @@ Resources:
               Service: "cloudfront.amazonaws.com"
             Action: "s3:PutObject"
             Resource: !Sub "arn:aws:s3:::${S3ForCloudFrontLogs}/*"
+            Condition:
+              StringEquals:
+                "AWS:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+
+  CloudFrontSiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !ImportValue StaticSiteS3BucketName
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowCloudFrontGets"
+            Effect: "Allow"
+            Principal:
+              Service: "cloudfront.amazonaws.com"
+            Action: "s3:GetObject"
+            Resource: !Sub "arn:aws:s3:::${StaticSiteS3BucketName}/*"
             Condition:
               StringEquals:
                 "AWS:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
