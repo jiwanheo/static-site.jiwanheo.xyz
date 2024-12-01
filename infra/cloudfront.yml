@@ -17,23 +17,6 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
 
-  CloudFrontLogBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref S3ForCloudFrontLogs
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: "AllowCloudFrontLogs"
-            Effect: "Allow"
-            Principal:
-              Service: "cloudfront.amazonaws.com"
-            Action: "s3:PutObject"
-            Resource: !Sub "arn:aws:s3:::${S3ForCloudFrontLogs}/*"
-            Condition:
-              StringEquals:
-                "AWS:SourceArn": !GetAtt CloudFrontDistribution.Arn
-
   MyCloudFrontOAC:
     Type: AWS::CloudFront::OriginAccessControl
     Properties:
@@ -79,6 +62,23 @@ Resources:
           Bucket: !Sub "${S3ForCloudFrontLogs}.s3.amazonaws.com"
           IncludeCookies: false
           Prefix: "cloudfront-logs/"
+
+  CloudFrontLogBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3ForCloudFrontLogs
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowCloudFrontLogs"
+            Effect: "Allow"
+            Principal:
+              Service: "cloudfront.amazonaws.com"
+            Action: "s3:PutObject"
+            Resource: !Sub "arn:aws:s3:::${S3ForCloudFrontLogs}/*"
+            Condition:
+              StringEquals:
+                "AWS:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${!GetAtt CloudFrontDistribution.Id}"
 
   # Route53DNSRecord:
   #   Type: AWS::Route53::RecordSet
