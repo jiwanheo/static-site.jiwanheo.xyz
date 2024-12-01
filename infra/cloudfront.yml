@@ -55,7 +55,7 @@ Resources:
               # AWS docs instruct to leave this field empty if using OAC instead of OAI
               OriginAccessIdentity: ""
             OriginAccessControlId: !Ref MyCloudFrontOAC # Use OAC here
-        enabled: true
+        Enabled: true
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: redirect-to-https # Ensure HTTPS is enforced
