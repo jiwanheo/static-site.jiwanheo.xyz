@@ -8,6 +8,9 @@ Resources:
       VersioningConfiguration:
         Status: Enabled # Enable versioning if needed
       AccessControl: LogDeliveryWrite
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
