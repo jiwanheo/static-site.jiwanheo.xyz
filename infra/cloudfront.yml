@@ -78,7 +78,7 @@ Resources:
             Resource: !Sub "arn:aws:s3:::${S3ForCloudFrontLogs}/*"
             Condition:
               StringEquals:
-                "AWS:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${MyCloudFrontDistribution}"
+                "AWS:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
 
   # Route53DNSRecord:
   #   Type: AWS::Route53::RecordSet
