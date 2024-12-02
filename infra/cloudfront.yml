@@ -112,6 +112,8 @@ Resources:
         DNSName: !GetAtt CloudFrontDistribution.DomainName # CloudFront distribution domain name
         HostedZoneId: Z2FDTNDATAQYW2
 Outputs:
-  CloudFrontDomainName:
-    Description: CloudFront Distribution Domain Name
-    Value: !GetAtt CloudFrontDistribution.DomainName
+  CloudFrontDistributionId:
+    Description: CloudFront Distribution ID
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: CloudFrontDistributionId

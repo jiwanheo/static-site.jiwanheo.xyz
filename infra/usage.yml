@@ -1,5 +1,11 @@
 Description: Set up usage notification and action
 
+Parameters:
+  CloudFrontDistributionId:
+    Type: String
+    Description: The CloudFront Distribution ID
+    Default: !ImportValue CloudFrontDistributionId
+
 Resources:
   MySnsTopic:
     Type: AWS::SNS::Topic
@@ -13,6 +19,37 @@ Resources:
       Endpoint: jiwanheo123@gmail.com
       TopicArn: !Ref MySnsTopic
 
+  CustomUsageLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies: # This is a list of policy documents
+        - PolicyName: LambdaCloudFrontPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudfront:GetDistributionConfig
+                  - cloudfront:UpdateDistribution
+                Resource: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistributionId}"
+        - PolicyName: LambdaCloudWatchPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                "Resource": "arn:aws:logs:us-east-1:752286769980:log-group:/aws/lambda/CloudFrontTrafficManagement:*"
+
   # Lambda Function to Handle ACM Validation
   CustomUsageLambdaFunction:
     Type: AWS::Lambda::Function
@@ -23,3 +60,4 @@ Resources:
         S3Bucket: usage-lambda-for-static-site.jiwanheo.xyz
         S3Key: usage_lambda_function.zip
       Timeout: 300
+      Role: !GetAtt CustomUsageLambdaExecutionRole.arn
