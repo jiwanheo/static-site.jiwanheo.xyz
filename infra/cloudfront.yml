@@ -99,16 +99,16 @@ Resources:
               StringEquals:
                 "AWS:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
 
-  # Route53DNSRecord:
-  #   Type: AWS::Route53::RecordSet
-  #   Properties:
-  #     HostedZoneId: Z066358329E65RHIEOJXQ # Replace with your actual hosted zone ID
-  #     Name: static-site.jiwanheo.xyz
-  #     Type: A
-  #     AliasTarget:
-  #       DNSName: !GetAtt CloudFrontDistribution.DomainName # CloudFront distribution domain name
-  #       HostedZoneId: Z2FDTNDATAQYW2
-# Outputs:
-#   CloudFrontDomainName:
-#     Description: CloudFront Distribution Domain Name
-#     Value: !GetAtt CloudFrontDistribution.DomainName
+  Route53DNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: Z066358329E65RHIEOJXQ # Replace with your actual hosted zone ID
+      Name: static-site.jiwanheo.xyz
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName # CloudFront distribution domain name
+        HostedZoneId: Z2FDTNDATAQYW2
+Outputs:
+  CloudFrontDomainName:
+    Description: CloudFront Distribution Domain Name
+    Value: !GetAtt CloudFrontDistribution.DomainName
