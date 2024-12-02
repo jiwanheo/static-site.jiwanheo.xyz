@@ -55,6 +55,7 @@ Resources:
         ViewerCertificate:
           AcmCertificateArn: !ImportValue MySSLCertificateStack-CertificateArn
           SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2019
         DefaultRootObject: index.html
         HttpVersion: http2
         PriceClass: PriceClass_100 # Use the cheapest price class (optional)
