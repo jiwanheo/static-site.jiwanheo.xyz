@@ -1,11 +1,5 @@
 Description: Set up usage notification and action
 
-Parameters:
-  CloudFrontDistributionId:
-    Type: String
-    Description: The CloudFront Distribution ID
-    Default: !ImportValue CloudFrontDistributionId
-
 Resources:
   MySnsTopic:
     Type: AWS::SNS::Topic
@@ -38,7 +32,7 @@ Resources:
                 Action:
                   - cloudfront:GetDistributionConfig
                   - cloudfront:UpdateDistribution
-                Resource: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistributionId}"
+                Resource: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${!ImportValue CloudFrontDistributionId}"
         - PolicyName: LambdaCloudWatchPolicy
           PolicyDocument:
             Version: "2012-10-17"
@@ -48,7 +42,7 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                "Resource": "arn:aws:logs:us-east-1:752286769980:log-group:/aws/lambda/CloudFrontTrafficManagement:*"
+                Resource: "arn:aws:logs:us-east-1:752286769980:log-group:/aws/lambda/CloudFrontTrafficManagement:*"
 
   # Lambda Function to Handle ACM Validation
   CustomUsageLambdaFunction:
