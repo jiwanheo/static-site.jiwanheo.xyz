@@ -72,3 +72,24 @@ Resources:
       Endpoint: !GetAtt CustomUsageLambdaFunction.Arn # Lambda function ARN as the endpoint
       Protocol: lambda
       TopicArn: !Ref MySnsTopic
+
+  CloudFrontRequestAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: CloudFrontHighRequestCount
+      MetricName: Requests
+      Namespace: AWS/CloudFront
+      Statistic: Minimum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 10 # Change this threshold based on your needs
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: DistributionId
+          Value: !ImportValue CloudFrontDistributionId
+      AlarmActions:
+        - !Ref MySnsTopic # Alarm state - Send notification to SNS
+      OKActions:
+        - !Ref MySnsTopic # OK state - Send notification to SNS
+      InsufficientDataActions: []
+      TreatMissingData: notBreaching
