@@ -32,7 +32,9 @@ Resources:
                 Action:
                   - cloudfront:GetDistributionConfig
                   - cloudfront:UpdateDistribution
-                Resource: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${!ImportValue CloudFrontDistributionId}"
+                Resource: !Sub
+                  - "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistributionId}"
+                  - CloudFrontDistributionId: !ImportValue CloudFrontDistributionId
         - PolicyName: LambdaCloudWatchPolicy
           PolicyDocument:
             Version: "2012-10-17"
