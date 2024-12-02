@@ -52,3 +52,11 @@ jobs:
             --template-file infra/cloudfront.yml \
             --stack-name CloudFrontStack \
             --capabilities CAPABILITY_NAMED_IAM
+
+      # Step 7: Deploy Usage Stack
+      - name: Deploy Usage Stack
+        run: |
+          aws cloudformation deploy \
+            --template-file infra/usage.yml \
+            --stack-name UsageStack \
+            --capabilities CAPABILITY_NAMED_IAM

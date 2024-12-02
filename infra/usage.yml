@@ -1,0 +1,7 @@
+Description: Set up usage notification and action
+
+Resources:
+  MySnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: static-site-high-requests
