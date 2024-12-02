@@ -5,6 +5,10 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: static-site-high-requests
-      Subscription:
-        - Protocol: email
-          Endpoint: jiwanheo123@gmail.com
+
+  MySnsTopicEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      Endpoint: jiwanheo123@gmail.com
+      TopicArn: !Ref MySnsTopic
