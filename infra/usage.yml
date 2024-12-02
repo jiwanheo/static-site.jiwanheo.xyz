@@ -46,14 +46,6 @@ Resources:
                   - logs:PutLogEvents
                 Resource: "arn:aws:logs:us-east-1:752286769980:log-group:/aws/lambda/CloudFrontTrafficManagement:*"
 
-  ApiGatewayInvokePermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !GetAtt CustomUsageLambdaExecutionRole.Arn
-      Action: lambda:InvokeFunction
-      Principal: sns.amazonaws.com
-      SourceArn: !Ref MySnsTopic
-
   # Lambda Function to Handle ACM Validation
   CustomUsageLambdaFunction:
     Type: AWS::Lambda::Function
@@ -65,3 +57,11 @@ Resources:
         S3Key: usage_lambda_function.zip
       Timeout: 300
       Role: !GetAtt CustomUsageLambdaExecutionRole.Arn
+
+  SNSInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt CustomUsageLambdaFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref MySnsTopic
