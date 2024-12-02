@@ -65,3 +65,10 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: sns.amazonaws.com
       SourceArn: !Ref MySnsTopic
+
+  SnsSubscriptionToLambda:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt CustomUsageLambdaFunction.Arn # Lambda function ARN as the endpoint
+      Protocol: lambda
+      TopicArn: !Ref MySnsTopic
