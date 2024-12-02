@@ -54,6 +54,13 @@ jobs:
             --capabilities CAPABILITY_NAMED_IAM
 
       # Step 7: Deploy Usage Stack
+      - name: Package and Upload Usage Lambda Code
+        run: |
+          cd infra/lambda
+          zip -r usage_lambda_function.zip sns_function.py
+          aws s3 cp usage_lambda_function.zip s3://usage-lambda-for-static-site.jiwanheo.xyz/usage_lambda_function.zip
+
+      # Step 8: Deploy Usage Stack
       - name: Deploy Usage Stack
         run: |
           aws cloudformation deploy \

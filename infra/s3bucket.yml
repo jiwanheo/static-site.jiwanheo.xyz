@@ -15,6 +15,13 @@ Resources:
       VersioningConfiguration:
         Status: Enabled # Enable versioning if needed
 
+  S3ForUsageLambda:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: usage-lambda-for-static-site.jiwanheo.xyz
+      VersioningConfiguration:
+        Status: Enabled # Enable versioning if needed
+
 Outputs:
   S3BucketName:
     Value: !Ref S3ForStaticSite
@@ -26,4 +33,9 @@ Outputs:
     Value: !GetAtt S3ForStaticSite.DomainName
     Export:
       Name: S3BucketDomainName # This name will be referenced by other stacks
+
+  UsageS3DomainName:
+    Value: !GetAtt S3ForUsageLambda.DomainName
+    Export:
+      Name: S3ForUsageLambda # This name will be referenced by other stacks
 

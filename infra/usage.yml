@@ -12,3 +12,15 @@ Resources:
       Protocol: email
       Endpoint: jiwanheo123@gmail.com
       TopicArn: !Ref MySnsTopic
+
+  # Lambda Function to Handle ACM Validation
+  CustomUsageLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.13
+      Code:
+        S3Bucket: usage-lambda-for-static-site.jiwanheo.xyz
+        S3Key: usage_lambda_function.zip
+      Timeout: 300
+      Role: !GetAtt CustomACMLambdaExecutionRole.Arn
