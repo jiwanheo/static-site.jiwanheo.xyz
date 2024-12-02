@@ -91,5 +91,4 @@ Resources:
         - !Ref MySnsTopic # Alarm state - Send notification to SNS
       OKActions:
         - !Ref MySnsTopic # OK state - Send notification to SNS
-      InsufficientDataActions: []
       TreatMissingData: notBreaching
