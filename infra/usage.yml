@@ -23,4 +23,3 @@ Resources:
         S3Bucket: usage-lambda-for-static-site.jiwanheo.xyz
         S3Key: usage_lambda_function.zip
       Timeout: 300
-      Role: !GetAtt CustomACMLambdaExecutionRole.Arn
