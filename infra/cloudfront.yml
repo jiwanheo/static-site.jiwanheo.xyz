@@ -4,7 +4,10 @@ Resources:
   S3ForCloudFrontLogs:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: cloudfront-logs.jiwanheo.xyz
+      BucketName: !If
+        - UseExistingBucket
+        - !Ref "AWS::NoValue"
+        - cloudfront-logs.jiwanheo.xyz
       VersioningConfiguration:
         Status: Enabled # Enable versioning if needed
       AccessControl: LogDeliveryWrite
