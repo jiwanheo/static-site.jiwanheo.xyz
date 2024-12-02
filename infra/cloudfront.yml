@@ -31,6 +31,8 @@ Resources:
     Type: AWS::CloudFront::Distribution
     Properties:
       DistributionConfig:
+        Aliases:
+          - static-site.jiwanheo.xyz
         Origins:
           - Id: S3Origin
             DomainName: !ImportValue S3BucketDomainName
@@ -55,7 +57,7 @@ Resources:
         ViewerCertificate:
           AcmCertificateArn: !ImportValue MySSLCertificateStack-CertificateArn
           SslSupportMethod: sni-only
-          MinimumProtocolVersion: TLSv1.2_2019
+          MinimumProtocolVersion: TLSv1.2_2021
         DefaultRootObject: index.html
         HttpVersion: http2
         PriceClass: PriceClass_100 # Use the cheapest price class (optional)
