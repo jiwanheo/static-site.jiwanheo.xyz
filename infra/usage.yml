@@ -44,7 +44,9 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                Resource: "arn:aws:logs:us-east-1:752286769980:log-group:/aws/lambda/CloudFrontTrafficManagement:*"
+                Resource: !Sub
+                  - "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${LambdaFunc}:*"
+                  - LambdaFunc: !Ref CustomUsageLambdaFunction
 
   # Lambda Function to Handle ACM Validation
   CustomUsageLambdaFunction:
