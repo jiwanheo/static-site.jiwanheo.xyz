@@ -45,14 +45,14 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource:
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/LambdaFunctionEnableAndDisableCloudFront"
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/LambdaFunctionEnableAndDisableCloudFront:*"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/LambdaEnableAndDisableCloudFront"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/LambdaEnableAndDisableCloudFront:*"
 
   # Lambda Function to Handle ACM Validation
   CustomUsageLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: LambdaFunctionEnableAndDisableCloudFront
+      FunctionName: LambdaEnableAndDisableCloudFront
       Handler: usage_lambda_function.lambda_handler
       Runtime: python3.13
       Code:
