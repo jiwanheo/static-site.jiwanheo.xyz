@@ -79,14 +79,16 @@ Resources:
       AlarmName: CloudFrontHighRequestCount
       MetricName: Requests
       Namespace: AWS/CloudFront
-      Statistic: Minimum
-      Period: 60
+      Statistic: Sum
+      Period: 300
       EvaluationPeriods: 1
       Threshold: 10 # Change this threshold based on your needs
       ComparisonOperator: GreaterThanThreshold
       Dimensions:
         - Name: DistributionId
           Value: !ImportValue CloudFrontDistributionId
+        - Name: Region
+          Value: Global
       AlarmActions:
         - !Ref MySnsTopic # Alarm state - Send notification to SNS
       OKActions:
