@@ -1,10 +1,18 @@
 import boto3
 import json
+import logging
 
 # Create CloudFront client
 cloudfront = boto3.client('cloudfront')
 
+# Set up logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 def lambda_handler(event, context):
+
+    logger.info(f"Here's the event: {event}")
+
     # Extract the SNS message
     sns_message = event['Records'][0]['Sns']['Message']
 
