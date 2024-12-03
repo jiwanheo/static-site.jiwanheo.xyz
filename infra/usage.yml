@@ -45,20 +45,19 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource:
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/CustomUsageLambdaFunctionName"
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/CustomUsageLambdaFunctionName:*"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/LambdaFunctionEnableAndDisableCloudFront"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/LambdaFunctionEnableAndDisableCloudFront:*"
 
   # Lambda Function to Handle ACM Validation
   CustomUsageLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: CustomUsageLambdaFunctionName
+      FunctionName: LambdaFunctionEnableAndDisableCloudFront
       Handler: lambda_function.lambda_handler
       Runtime: python3.13
       Code:
         S3Bucket: usage-lambda-for-static-site.jiwanheo.xyz
         S3Key: usage_lambda_function.zip
-        S3ObjectVersion: 0.1
       Timeout: 300
       Role: !GetAtt CustomUsageLambdaExecutionRole.Arn
 
