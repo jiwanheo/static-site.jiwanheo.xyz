@@ -1,0 +1,119 @@
+Description: Set up CloudFront Distribution and Route53 DNS for the static site
+
+Resources:
+  S3ForCloudFrontLogs:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: cloudfront-logs.jiwanheo.xyz
+      VersioningConfiguration:
+        Status: Enabled # Enable versioning if needed
+      AccessControl: LogDeliveryWrite
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  MyCloudFrontOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: "CloudFrontOAC"
+        Description: "OAC for S3 bucket access"
+        OriginAccessControlOriginType: "s3"
+        SigningBehavior: "always"
+        SigningProtocol: "sigv4" # Use AWS Signature Version 4 (sigv4)
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - static-site.jiwanheo.xyz
+        Origins:
+          - Id: S3Origin
+            DomainName: !ImportValue S3BucketDomainName
+            S3OriginConfig:
+              # AWS docs instruct to leave this field empty if using OAC instead of OAI
+              OriginAccessIdentity: ""
+            OriginAccessControlId: !Ref MyCloudFrontOAC # Use OAC here
+        Enabled: true
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https # Ensure HTTPS is enforced
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          ForwardedValues:
+            QueryString: false # Do not forward query strings to S3
+            Cookies:
+              Forward: none # Do not forward cookies
+        ViewerCertificate:
+          AcmCertificateArn: !ImportValue MySSLCertificateStack-CertificateArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        DefaultRootObject: index.html
+        HttpVersion: http2
+        PriceClass: PriceClass_100 # Use the cheapest price class (optional)
+        Logging:
+          Bucket: !Sub "${S3ForCloudFrontLogs}.s3.amazonaws.com"
+          IncludeCookies: false
+          Prefix: "cloudfront-logs/"
+
+  CloudFrontLogBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3ForCloudFrontLogs
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowCloudFrontLogs"
+            Effect: "Allow"
+            Principal:
+              Service: "cloudfront.amazonaws.com"
+            Action: "s3:PutObject"
+            Resource: !Sub "arn:aws:s3:::${S3ForCloudFrontLogs}/*"
+            Condition:
+              StringEquals:
+                "AWS:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+
+  CloudFrontSiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !ImportValue StaticSiteS3BucketName
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: "AllowCloudFrontGets"
+            Effect: "Allow"
+            Principal:
+              Service: "cloudfront.amazonaws.com"
+            Action: "s3:GetObject"
+            Resource: !Sub
+              - "arn:aws:s3:::${BucketName}/*"
+              - BucketName: !ImportValue StaticSiteS3BucketName
+            Condition:
+              StringEquals:
+                "AWS:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
+
+  Route53DNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: Z066358329E65RHIEOJXQ # Replace with your actual hosted zone ID
+      Name: static-site.jiwanheo.xyz
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt CloudFrontDistribution.DomainName # CloudFront distribution domain name
+        HostedZoneId: Z2FDTNDATAQYW2
+Outputs:
+  CloudFrontDistributionId:
+    Description: CloudFront Distribution ID
+    Value: !Ref CloudFrontDistribution
+    Export:
+      Name: CloudFrontDistributionId

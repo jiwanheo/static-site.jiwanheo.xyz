@@ -1,0 +1,69 @@
+name: Deploy CloudFormation Stack
+
+on:
+  push:
+    branches:
+      - phase4 # Triggers on pushes to the phase4 branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Configure AWS Credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1 # Replace with your desired region
+
+      # Step 3: Deploy CloudFormation Stack
+      - name: Deploy S3 stack
+        run: |
+          aws cloudformation deploy \
+            --template-file infra/s3bucket.yml \
+            --stack-name S3BucketStack \
+            --capabilities CAPABILITY_NAMED_IAM
+
+      # Step 4: Set up lambda function
+      - name: Package and Upload Lambda Code
+        run: |
+          cd infra/lambda
+          zip -r lambda_function.zip lambda_function.py
+          aws s3 cp lambda_function.zip s3://lambda-for-static-site.jiwanheo.xyz/lambda_function.zip
+
+      # Step 5: Deploy SSL Certificate Stack
+      - name: Deploy SSL Certificate Stack
+        run: |
+          aws cloudformation deploy \
+            --template-file infra/sslcert.yml \
+            --stack-name MySSLCertificateStack \
+            --capabilities CAPABILITY_NAMED_IAM
+
+      # Step 6: Deploy CloudFront Stack
+      - name: Deploy CloudFront Stack
+        run: |
+          aws cloudformation deploy \
+            --template-file infra/cloudfront.yml \
+            --stack-name CloudFrontStack \
+            --capabilities CAPABILITY_NAMED_IAM
+
+      # Step 7: Deploy Usage Lambda function
+      - name: Package and Upload Usage Lambda Code
+        run: |
+          cd infra/lambda
+          zip -r usage_lambda_function.zip usage_lambda_function.py
+          aws s3 cp usage_lambda_function.zip s3://usage-lambda-for-static-site.jiwanheo.xyz/usage_lambda_function.zip
+
+      # Step 8: Deploy Usage Stack
+      - name: Deploy Usage Stack
+        run: |
+          aws cloudformation deploy \
+            --template-file infra/usage.yml \
+            --stack-name UsageStack \
+            --capabilities CAPABILITY_NAMED_IAM

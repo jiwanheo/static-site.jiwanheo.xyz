@@ -1,0 +1,99 @@
+Description: Set up usage notification and action
+
+Resources:
+  MySnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: static-site-high-requests
+
+  MySnsTopicEmailSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      Endpoint: jiwanheo123@gmail.com
+      TopicArn: !Ref MySnsTopic
+
+  CustomUsageLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies: # This is a list of policy documents
+        - PolicyName: LambdaCloudFrontPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudfront:GetDistributionConfig
+                  - cloudfront:UpdateDistribution
+                Resource: !Sub
+                  - "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistributionId}"
+                  - CloudFrontDistributionId: !ImportValue CloudFrontDistributionId
+        - PolicyName: LambdaCloudWatchPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/LambdaFunctionEnableAndDisableCloudFront"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/LambdaFunctionEnableAndDisableCloudFront:*"
+
+  # Lambda Function to Handle ACM Validation
+  CustomUsageLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: LambdaFunctionEnableAndDisableCloudFront
+      Handler: usage_lambda_function.lambda_handler
+      Runtime: python3.13
+      Code:
+        S3Bucket: usage-lambda-for-static-site.jiwanheo.xyz
+        S3Key: usage_lambda_function.zip
+      Timeout: 300
+      Role: !GetAtt CustomUsageLambdaExecutionRole.Arn
+
+  SNSInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt CustomUsageLambdaFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref MySnsTopic
+
+  SnsSubscriptionToLambda:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !GetAtt CustomUsageLambdaFunction.Arn # Lambda function ARN as the endpoint
+      Protocol: lambda
+      TopicArn: !Ref MySnsTopic
+
+  CloudFrontRequestAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: CloudFrontHighRequestCount
+      MetricName: Requests
+      Namespace: AWS/CloudFront
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 10 # Change this threshold based on your needs
+      ComparisonOperator: GreaterThanThreshold
+      Dimensions:
+        - Name: DistributionId
+          Value: !ImportValue CloudFrontDistributionId
+        - Name: Region
+          Value: Global
+      AlarmActions:
+        - !Ref MySnsTopic # Alarm state - Send notification to SNS
+      OKActions:
+        - !Ref MySnsTopic # OK state - Send notification to SNS
+      TreatMissingData: notBreaching
