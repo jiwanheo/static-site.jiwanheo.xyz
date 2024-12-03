@@ -58,6 +58,7 @@ Resources:
       Code:
         S3Bucket: usage-lambda-for-static-site.jiwanheo.xyz
         S3Key: usage_lambda_function.zip
+        S3ObjectVersion: 0.1
       Timeout: 300
       Role: !GetAtt CustomUsageLambdaExecutionRole.Arn
 
